@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Original comment from script source: https://github.com/jimmidyson/asdf-upx/blob/bin/install#L3
+#
+# Shamelessly stolen from https://github.com/beardix/asdf-yq/blob/master/bin/list-all#L7
+# Thank you for your great and simple work
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+error_exit() {
+  echo "$1" >&2
+  exit "${2:-1}"
+}
+
+get_platform() {
+  echo "$(uname | tr '[:upper:]' '[:lower:]')"
+}
+
+install() {
+  declare -r install_type="$1"
+  declare -r download_path="$2"
+  declare -r install_path="$3"
+
+  if [ "$install_type" == "version" ]; then
+    mkdir "$install_path/bin"
+
+    declare platform="$(get_platform)";
+    if [ "${platform}" == "darwin" ]; then
+      brew install dagger/tap/dagger
+      ln -s "$(brew --prefix)"/bin/dagger "$install_path/bin/dagger"
+      return
+    fi
+
+    mv "$download_path/bin/dagger" "$install_path/bin"
+    chmod a+x "$install_path/bin/dagger"
+  else
+    echo "Only supports released executables, sorry!"
+    exit 1
+  fi
+}
+
+install "$ASDF_INSTALL_TYPE" "$ASDF_DOWNLOAD_PATH" "$ASDF_INSTALL_PATH"
